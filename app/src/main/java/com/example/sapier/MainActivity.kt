@@ -1,0 +1,90 @@
+package com.example.sapier
+import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.provider.MediaStore
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModelProvider
+import com.example.sapier.data.AppConfig
+import com.example.sapier.data.Repository
+import com.example.sapier.service.EmailService
+import com.example.sapier.service.TelegramService
+import com.example.sapier.ui.MainScreen
+import com.example.sapier.ui.MainViewModel
+import com.example.sapier.ui.theme.SapierTheme
+
+class MainActivity : ComponentActivity() {
+    private lateinit var repository: Repository
+    private lateinit var telegramService: TelegramService
+    private lateinit var emailService: EmailService
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        // Initialize services
+        repository = Repository(this)
+        telegramService = TelegramService(this)
+        emailService = EmailService(this)
+        
+        // Create ViewModel with custom factory
+        val viewModel: MainViewModel by viewModels {
+            object : ViewModelProvider.Factory {
+                override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                    return MainViewModel(repository, telegramService, emailService) as T
+                }
+            }
+        }
+        
+        setContent {
+            SapierTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    val uiState by viewModel.uiState.collectAsState()
+                    
+                    // Image picker launcher
+                    val imagePickerLauncher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.GetContent()
+                    ) { uri: Uri? ->
+                        uri?.let { imageUri ->
+                            viewModel.processImage(imageUri, this@MainActivity)
+                        }
+                    }
+                    
+                    MainScreen(
+                        uiState = uiState,
+                        onProcessImage = {
+                            // Launch image picker directly
+                            imagePickerLauncher.launch("image/*")
+                        },
+                        onUpdateConfig = { config ->
+                            viewModel.updateConfig(config)
+                        },
+                        onClearStatus = {
+                            viewModel.clearProcessingStatus()
+                        },
+                        onGetSummary = {
+                            // Show summary in a dialog or toast
+                            val summary = viewModel.getDailySummary()
+                            // You could show this in a dialog or snackbar
+                        },
+                        onClearData = {
+                            viewModel.clearAllData()
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
