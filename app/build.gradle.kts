@@ -75,6 +75,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     
+
+    
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.7")
     
@@ -84,22 +86,25 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.3.1")
     implementation("androidx.camera:camera-view:1.3.1")
     
+    // ML Kit for text recognition and face detection
+    implementation("com.google.mlkit:text-recognition:16.0.0")
+    implementation("com.google.mlkit:face-detection:16.1.5")
+    
     // Network requests
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     
-    // Telegram Bot API
-    implementation("org.telegram:telegrambots:6.8.0")
-    implementation("org.telegram:telegrambots-meta:6.8.0")
+    // Simple HTTP client for API calls
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     
-    // OpenAI API for LLM
-    implementation("com.aallam.openai:openai-client:3.7.0")
-    implementation("io.ktor:ktor-client-okhttp:2.3.7")
+    // JSON parsing
+    implementation("com.google.code.gson:gson:2.10.1")
     
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     
     // ViewModel and LiveData
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")

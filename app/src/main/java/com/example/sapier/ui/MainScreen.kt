@@ -12,6 +12,10 @@ import com.example.sapier.data.MainUiState
 fun MainScreen(
     uiState: MainUiState,
     onProcessImage: () -> Unit,
+    onProcessMultipleImages: () -> Unit,
+    onTestTelegram: () -> Unit,
+    onSendSonPhoto: () -> Unit,
+    onSendSaraPhoto: () -> Unit,
     onUpdateConfig: (com.example.sapier.data.AppConfig) -> Unit,
     onClearStatus: () -> Unit,
     onGetSummary: () -> Unit,
@@ -58,6 +62,10 @@ fun MainScreen(
                 0 -> ProcessTab(
                     uiState = uiState,
                     onProcessImage = onProcessImage,
+                    onProcessMultipleImages = onProcessMultipleImages,
+                    onTestTelegram = onTestTelegram,
+                    onSendSaraPhoto = onSendSaraPhoto,
+                    onSendSonPhoto = onSendSonPhoto,
                     onClearStatus = onClearStatus
                 )
                 1 -> ConfigTab(
@@ -80,6 +88,10 @@ fun MainScreen(
 fun ProcessTab(
     uiState: MainUiState,
     onProcessImage: () -> Unit,
+    onProcessMultipleImages: () -> Unit,
+    onTestTelegram: () -> Unit,
+    onSendSaraPhoto: () -> Unit,
+    onSendSonPhoto: () -> Unit,
     onClearStatus: () -> Unit
 ) {
     Column(
@@ -96,9 +108,19 @@ fun ProcessTab(
                 )
             }
             is com.example.sapier.data.ProcessingStatus.Processing -> {
-                CircularProgressIndicator()
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Processing image...")
+                Column(
+                    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Processing image...")
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "Analyzing for receipts and faces...",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             is com.example.sapier.data.ProcessingStatus.Success -> {
                 Card(
@@ -136,13 +158,74 @@ fun ProcessTab(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // Process button
+        // Process single image button
         Button(
             onClick = onProcessImage,
             modifier = Modifier.fillMaxWidth(),
             enabled = uiState.isConfigValid && uiState.processingStatus is com.example.sapier.data.ProcessingStatus.Idle
         ) {
-            Text("Process Image from Gallery")
+            Text(
+                if (uiState.processingStatus is com.example.sapier.data.ProcessingStatus.Processing) 
+                    "Processing..." 
+                else 
+                    "Process Single Image"
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Process multiple images button
+        OutlinedButton(
+            onClick = onProcessMultipleImages,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = uiState.isConfigValid && uiState.processingStatus is com.example.sapier.data.ProcessingStatus.Idle
+        ) {
+            Text("Process Multiple Images (Find All Receipts)")
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Test Telegram connection button
+        OutlinedButton(
+            onClick = onTestTelegram,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = uiState.isConfigValid && uiState.processingStatus is com.example.sapier.data.ProcessingStatus.Idle
+        ) {
+            Text("Test Telegram Connection")
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Send Sara Photo button
+        Button(
+            onClick = onSendSaraPhoto,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = uiState.isConfigValid && uiState.processingStatus is com.example.sapier.data.ProcessingStatus.Idle,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary
+            )
+        ) {
+            Text(
+                "🔍 Find & Send All Sara Photos",
+                color = MaterialTheme.colorScheme.onSecondary
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Send Son Photo button
+        Button(
+            onClick = onSendSonPhoto,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = uiState.isConfigValid && uiState.processingStatus is com.example.sapier.data.ProcessingStatus.Idle,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.tertiary
+            )
+        ) {
+            Text(
+                "👦 Find & Send All Son Photos",
+                color = MaterialTheme.colorScheme.onTertiary
+            )
         }
         
         if (uiState.processingStatus !is com.example.sapier.data.ProcessingStatus.Idle) {

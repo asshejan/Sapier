@@ -21,9 +21,6 @@ class SapierApplication : Application() {
     override fun onTerminate() {
         super.onTerminate()
         Log.d(TAG, "Sapier application terminating...")
-        
-        // Cleanup temporary files
-        ImageUtils.cleanupTempFiles(this)
     }
     
     private fun initializeApp() {

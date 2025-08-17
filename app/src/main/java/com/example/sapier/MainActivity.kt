@@ -1,7 +1,9 @@
 package com.example.sapier
 import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.activity.ComponentActivity
@@ -9,6 +11,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -53,12 +56,23 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val uiState by viewModel.uiState.collectAsState()
                     
-                    // Image picker launcher
+                    // Image picker launcher for single image
                     val imagePickerLauncher = rememberLauncherForActivityResult(
                         contract = ActivityResultContracts.GetContent()
                     ) { uri: Uri? ->
                         uri?.let { imageUri ->
+                            // Process image in background
                             viewModel.processImage(imageUri, this@MainActivity)
+                        }
+                    }
+                    
+                    // Multiple images picker launcher
+                    val multipleImagesPickerLauncher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.GetMultipleContents()
+                    ) { uris: List<Uri>? ->
+                        uris?.let { imageUris ->
+                            // Process multiple images
+                            viewModel.processMultipleImages(imageUris, this@MainActivity)
                         }
                     }
                     
@@ -67,6 +81,22 @@ class MainActivity : ComponentActivity() {
                         onProcessImage = {
                             // Launch image picker directly
                             imagePickerLauncher.launch("image/*")
+                        },
+                        onProcessMultipleImages = {
+                            // Launch multiple images picker
+                            multipleImagesPickerLauncher.launch("image/*")
+                        },
+                        onTestTelegram = {
+                            // Test Telegram connection
+                            viewModel.testTelegramConnection()
+                        },
+                        onSendSonPhoto = {
+                            // Send Son's photos from album
+                            viewModel.sendSonPhoto(this@MainActivity)
+                        },
+                        onSendSaraPhoto = {
+                            // Send Sara's photos from album
+                            viewModel.sendSaraPhoto(this@MainActivity)
                         },
                         onUpdateConfig = { config ->
                             viewModel.updateConfig(config)

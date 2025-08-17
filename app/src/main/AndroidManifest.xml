@@ -40,12 +40,7 @@
             </intent-filter>
         </activity>
 
-        <!-- Service for background processing -->
-        <service
-            android:name=".service.ImageProcessingService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
+
 
         <!-- File provider for sharing images -->
         <provider

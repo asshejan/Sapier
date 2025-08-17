@@ -46,6 +46,37 @@ class TelegramService(private val context: Context) {
         }
     }
     
+    suspend fun sendIndividualReceipt(receipt: Receipt, botToken: String, chatId: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val message = buildIndividualReceiptMessage(receipt)
+                
+                // First send the receipt details as text
+                val json = JSONObject().apply {
+                    put("chat_id", chatId)
+                    put("text", message)
+                    put("parse_mode", "HTML")
+                }
+                
+                val requestBody = json.toString().toRequestBody(mediaType)
+                val request = Request.Builder()
+                    .url("https://api.telegram.org/bot$botToken/sendMessage")
+                    .post(requestBody)
+                    .build()
+                
+                val response = client.newCall(request).execute()
+                val textSent = response.isSuccessful
+                
+                // Then send the receipt image
+                val imageSent = sendPhoto(receipt.imageUri, "Receipt Image", botToken, chatId)
+                
+                textSent && imageSent
+            } catch (e: Exception) {
+                false
+            }
+        }
+    }
+    
     suspend fun sendPhoto(imageUri: Uri, caption: String, botToken: String, chatId: String): Boolean {
         return withContext(Dispatchers.IO) {
             try {
@@ -113,6 +144,30 @@ class TelegramService(private val context: Context) {
             
             🛒 <b>Top Items:</b>
             $topItemsText
+        """.trimIndent()
+    }
+    
+    private fun buildIndividualReceiptMessage(receipt: Receipt): String {
+        val dateFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm")
+        val date = receipt.timestamp.format(dateFormatter)
+        
+        val itemsText = receipt.items.joinToString("\n") { item ->
+            "• ${item.name}: $${String.format("%.2f", item.price)}"
+        }
+        
+        return """
+            🧾 <b>New Receipt Detected!</b>
+            
+            🏪 <b>Store:</b> ${receipt.store ?: "Unknown Store"}
+            📅 <b>Date:</b> $date
+            💰 <b>Total:</b> $${String.format("%.2f", receipt.total)}
+            
+            📋 <b>Items:</b>
+            $itemsText
+            
+            📊 <b>Summary:</b>
+            • Items: ${receipt.items.size}
+            • Total Amount: $${String.format("%.2f", receipt.total)}
         """.trimIndent()
     }
     

@@ -1,80 +1,64 @@
 package com.example.sapier.util
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import java.util.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.InputStream
 
 object ImageUtils {
     
     /**
-     * Creates a temporary file from a URI
+     * Load a bitmap from a URI with proper error handling
      */
-    fun createTempFileFromUri(context: Context, uri: Uri, prefix: String = "image"): File? {
-        return try {
-            val inputStream = context.contentResolver.openInputStream(uri)
-            val file = File(context.cacheDir, "${prefix}_${System.currentTimeMillis()}.jpg")
-            
-            inputStream?.use { input ->
-                FileOutputStream(file).use { output ->
-                    input.copyTo(output)
-                }
+    suspend fun loadBitmapFromUri(uri: Uri, context: Context): Bitmap? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream?.close()
+                bitmap
+            } catch (e: Exception) {
+                null
             }
-            
-            file
-        } catch (e: IOException) {
-            e.printStackTrace()
-            null
         }
     }
     
     /**
-     * Gets file extension from URI
+     * Resize bitmap to a maximum size to prevent memory issues
      */
-    fun getFileExtension(context: Context, uri: Uri): String? {
-        return context.contentResolver.getType(uri)?.split("/")?.lastOrNull()
-    }
-    
-    /**
-     * Checks if the image is likely a receipt based on file name or content type
-     */
-    fun isLikelyReceipt(fileName: String): Boolean {
-        val receiptKeywords = listOf("receipt", "bill", "invoice", "purchase", "transaction")
-        val lowerFileName = fileName.lowercase()
+    fun resizeBitmap(bitmap: Bitmap, maxSize: Int): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
         
-        return receiptKeywords.any { keyword ->
-            lowerFileName.contains(keyword)
+        if (width <= maxSize && height <= maxSize) {
+            return bitmap
         }
+        
+        val ratio = minOf(maxSize.toFloat() / width, maxSize.toFloat() / height)
+        val newWidth = (width * ratio).toInt()
+        val newHeight = (height * ratio).toInt()
+        
+        return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
     }
     
     /**
-     * Generates a unique filename
+     * Check if the image is a valid format for processing
      */
-    fun generateUniqueFileName(prefix: String, extension: String): String {
-        return "${prefix}_${System.currentTimeMillis()}_${UUID.randomUUID().toString().take(8)}.$extension"
-    }
-    
-    /**
-     * Cleans up temporary files
-     */
-    fun cleanupTempFiles(context: Context) {
-        try {
-            val cacheDir = context.cacheDir
-            val files = cacheDir.listFiles { file ->
-                file.name.startsWith("temp_") || 
-                file.name.startsWith("image_") || 
-                file.name.startsWith("email_")
-            }
-            
-            files?.forEach { file ->
-                if (file.exists() && file.canWrite()) {
-                    file.delete()
-                }
-            }
+    fun isValidImageFormat(uri: Uri, context: Context): Boolean {
+        return try {
+            // Try to get the MIME type from content resolver
+            val mimeType = context.contentResolver.getType(uri)
+            mimeType?.startsWith("image/") == true
         } catch (e: Exception) {
-            e.printStackTrace()
+            // Fallback to checking URI path
+            val path = uri.toString().lowercase()
+            path.endsWith(".jpg") || path.endsWith(".jpeg") || 
+            path.endsWith(".png") || path.endsWith(".bmp") ||
+            path.endsWith(".webp") || path.endsWith(".heic") ||
+            path.endsWith(".heif")
         }
     }
 }
