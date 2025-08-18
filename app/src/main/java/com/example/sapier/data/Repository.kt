@@ -26,6 +26,10 @@ class Repository(private val context: Context) {
         val EMAIL_PASSWORD = stringPreferencesKey("email_password")
         val FATHER_EMAIL = stringPreferencesKey("father_email")
         val SON_NAME = stringPreferencesKey("son_name")
+        val USE_GOOGLE_PHOTOS = booleanPreferencesKey("use_google_photos")
+        val GOOGLE_PHOTOS_ACCESS_TOKEN = stringPreferencesKey("google_photos_access_token")
+        val AUTO_SEND_RECEIPTS = booleanPreferencesKey("auto_send_receipts")
+        val AUTO_SEND_SON_PHOTOS = booleanPreferencesKey("auto_send_son_photos")
     }
     
     // Receipt operations
@@ -63,7 +67,11 @@ class Repository(private val context: Context) {
             emailUsername = preferences[PreferencesKeys.EMAIL_USERNAME] ?: "",
             emailPassword = preferences[PreferencesKeys.EMAIL_PASSWORD] ?: "",
             fatherEmail = preferences[PreferencesKeys.FATHER_EMAIL] ?: "",
-            sonName = preferences[PreferencesKeys.SON_NAME] ?: ""
+            sonName = preferences[PreferencesKeys.SON_NAME] ?: "",
+            useGooglePhotos = preferences[PreferencesKeys.USE_GOOGLE_PHOTOS] ?: false,
+            googlePhotosAccessToken = preferences[PreferencesKeys.GOOGLE_PHOTOS_ACCESS_TOKEN] ?: "",
+            autoSendReceipts = preferences[PreferencesKeys.AUTO_SEND_RECEIPTS] ?: false,
+            autoSendSonPhotos = preferences[PreferencesKeys.AUTO_SEND_SON_PHOTOS] ?: false
         )
     }
     
@@ -76,12 +84,24 @@ class Repository(private val context: Context) {
             preferences[PreferencesKeys.EMAIL_PASSWORD] = config.emailPassword
             preferences[PreferencesKeys.FATHER_EMAIL] = config.fatherEmail
             preferences[PreferencesKeys.SON_NAME] = config.sonName
+            preferences[PreferencesKeys.USE_GOOGLE_PHOTOS] = config.useGooglePhotos
+            preferences[PreferencesKeys.GOOGLE_PHOTOS_ACCESS_TOKEN] = config.googlePhotosAccessToken
+            preferences[PreferencesKeys.AUTO_SEND_RECEIPTS] = config.autoSendReceipts
+            preferences[PreferencesKeys.AUTO_SEND_SON_PHOTOS] = config.autoSendSonPhotos
         }
     }
     
     fun isConfigValid(config: AppConfig): Boolean {
-        return config.telegramBotToken.isNotBlank() &&
-               config.telegramChatId.isNotBlank() &&
+        // Basic validation - at least Telegram bot token and chat ID are required
+        val hasBasicConfig = config.telegramBotToken.isNotBlank() && config.telegramChatId.isNotBlank()
+        
+        // For Google Photos features, we need at least basic config
+        if (config.useGooglePhotos) {
+            return hasBasicConfig && config.googlePhotosAccessToken.isNotBlank()
+        }
+        
+        // For other features, require all config fields
+        return hasBasicConfig &&
                config.openaiApiKey.isNotBlank() &&
                config.emailUsername.isNotBlank() &&
                config.emailPassword.isNotBlank() &&

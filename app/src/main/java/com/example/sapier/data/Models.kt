@@ -36,7 +36,11 @@ data class AppConfig(
     val emailUsername: String = "",
     val emailPassword: String = "",
     val fatherEmail: String = "",
-    val sonName: String = ""
+    val sonName: String = "",
+    val useGooglePhotos: Boolean = false,
+    val googlePhotosAccessToken: String = "",
+    val autoSendReceipts: Boolean = false,
+    val autoSendSonPhotos: Boolean = false
 )
 
 // Processing status
@@ -45,6 +49,7 @@ sealed class ProcessingStatus {
     object Processing : ProcessingStatus()
     data class Success(val message: String) : ProcessingStatus()
     data class Error(val message: String) : ProcessingStatus()
+    data class Info(val message: String) : ProcessingStatus()
 }
 
 // UI state

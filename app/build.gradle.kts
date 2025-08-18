@@ -16,6 +16,19 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Specify supported ABIs
+        ndk {
+            abiFilters.add("x86_64")
+            abiFilters.add("arm64-v8a")
+        }
+    }
+    
+    // Disable ABI splits to avoid R.jar issues
+    splits {
+        abi {
+            isEnable = false
+        }
     }
 
     buildTypes {
@@ -62,6 +75,13 @@ android {
         abortOnError = false
         checkReleaseBuilds = false
     }
+    
+    // Ensure we include native libraries for all ABIs
+    packaging {
+        resources {
+            pickFirsts.add("**/*.so")
+        }
+    }
 }
 
 dependencies {
@@ -101,6 +121,13 @@ dependencies {
     // JSON parsing
     implementation("com.google.code.gson:gson:2.10.1")
     
+    // Google Photos API - Using simpler approach
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation("com.google.api-client:google-api-client-android:2.2.0")
+    // Removed problematic photoslibrary dependency - will use REST API directly
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.19.0")
+    implementation("com.google.guava:guava:32.1.2-android")
+    
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
@@ -121,4 +148,72 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+// Add a task to clean the build directory before building
+tasks.register("forceClean") {
+    doLast {
+        println("Forcing clean of build directory")
+        project.delete(fileTree("build") {
+            include("**/R.jar")
+        })
+        // Try to release file handles by suggesting garbage collection
+        System.gc()
+    }
+}
+
+// Make sure the clean task depends on forceClean
+tasks.named("clean") {
+    dependsOn("forceClean")
+}
+
+// Add a property to skip resource processing if needed
+val skipResourceProcessing = project.hasProperty("skipResourceProcessing") && 
+    project.property("skipResourceProcessing") == "true"
+
+// Disable resource processing tasks if skipResourceProcessing is true
+if (skipResourceProcessing) {
+    tasks.whenTaskAdded {
+        if (name.contains("processResources") || name.contains("ProcessResources")) {
+            enabled = false
+            println("Disabled task: $name due to skipResourceProcessing flag")
+        }
+    }
+}
+
+// Add hooks to run forceClean before resource processing tasks
+android.applicationVariants.all {
+    val variantName = name.capitalize()
+    tasks.named("process${variantName}Resources").configure {
+        doFirst {
+            println("Running forceClean before process${variantName}Resources")
+            project.delete(fileTree("build") {
+                include("**/R.jar")
+            })
+            // Try to release file handles by suggesting garbage collection
+            System.gc()
+            // Add a small delay to ensure file handles are released
+            Thread.sleep(1000)
+        }
+    }
+    
+    // Also add a hook after the task to ensure R.jar is not locked
+    tasks.named("process${variantName}Resources").configure {
+        doLast {
+            println("Running cleanup after process${variantName}Resources")
+            // Try to release file handles by suggesting garbage collection
+            System.gc()
+        }
+    }
+}
+
+// Add a gradle property to control ABI filters from command line
+if (project.hasProperty("abiFilters")) {
+    val abiFiltersValue = project.property("abiFilters").toString()
+    val filters = abiFiltersValue.split(",")
+    android.defaultConfig.ndk.abiFilters.clear()
+    filters.forEach { filter ->
+        android.defaultConfig.ndk.abiFilters.add(filter.trim())
+    }
+    println("Using ABI filters from command line: $abiFiltersValue")
 }

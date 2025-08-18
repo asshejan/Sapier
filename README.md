@@ -1,82 +1,137 @@
-# Sapier - Smart Image Processing App
+# Sapier - Smart Photo Analysis & Receipt Management
 
-Sapier is an Android application that processes images to detect receipts and people, then automatically sends the results to appropriate destinations.
+Sapier is an Android application that automatically analyzes photos to detect receipts and people, then sends relevant information to configured destinations like Telegram and email.
 
-## Features
+## 🚀 New Automatic Features
 
-### Image Processing
-- **Receipt Detection**: Uses ML Kit Text Recognition to detect and parse receipt information
-- **Person Detection**: Uses ML Kit Face Detection to identify people in photos
-- **Background Processing**: All image processing runs in the background without blocking the UI
+### 🤖 Automatic Google Photos Processing
 
-### Automatic Actions
-- **Receipt Summary**: Sends daily receipt summaries to Telegram
-- **Photo Sharing**: Automatically sends photos of detected people to father via email and Telegram
+Sapier now supports **direct access to Google Photos** with automatic processing capabilities:
 
-## How It Works
+#### 1. **Auto-Scan All Photos for Receipts**
+- Automatically scans all photos in your Google Photos library
+- Uses AI to detect receipt images
+- Extracts receipt information (store, total, items, date)
+- Sends receipt summaries directly to Telegram
+- No manual photo selection required!
 
-1. **Configuration**: Set up your Telegram bot token, chat ID, email credentials, and son's name in the Config tab
-2. **Image Processing**: 
-   - **Single Image**: Click "Process Single Image" to analyze one image
-   - **Multiple Images**: Click "Process Multiple Images (Find All Receipts)" to scan through all your photos and find receipts
-3. **Results**: View processed receipts and person detections in the Results tab
+#### 2. **Auto-Send All Son Album Photos**
+- Automatically finds all photos in your "Son" album on Google Photos
+- Sends all photos directly to configured destinations
+- Perfect for keeping family updated with son's activities
+- Works with any album named "Son"
 
-## Enhanced Features
+#### 3. **Process All Recent Photos (Complete Analysis)**
+- Comprehensive processing of all recent photos
+- Detects both receipts AND son photos in one operation
+- Sends receipts to Telegram
+- Sends son photos to both email and Telegram
+- Most efficient way to process large photo collections
 
-### Improved Receipt Detection
-- **Comprehensive Keyword Matching**: Detects receipts using 30+ keywords and patterns
-- **Smart Pattern Recognition**: Identifies receipts even with minimal text
-- **Multiple Format Support**: Works with JPG, PNG, WebP, HEIC, and other image formats
-- **Robust Parsing**: Extracts store names, totals, dates, and individual items
+## 🔧 Setup Instructions
 
-### Batch Processing
-- **Multiple Image Selection**: Process all your photos at once to find receipts
-- **Error Handling**: Continues processing even if some images fail
-- **Progress Tracking**: Shows processing status and results summary
+### 1. **Google Photos Integration**
+1. Open the app and go to the **Config** tab
+2. Check "Use Google Photos"
+3. Click "Sign In to Google Photos" in the **Process** tab
+4. Grant necessary permissions to access your photos
 
-## Technical Details
+### 2. **Configuration**
+Fill in the required fields in the **Config** tab:
 
-### Fixed Issues
-- **UI Freezing**: Resolved by moving all image processing to background threads using coroutines
-- **Memory Issues**: Added image resizing to prevent out-of-memory errors
-- **Dependency Conflicts**: Resolved by using compatible ML Kit and HTTP client libraries
+- **Telegram Settings**: Bot token and chat ID
+- **Email Settings**: Username, password, and father's email
+- **Family Settings**: Son's name
+- **Google Photos Options**:
+  - ✅ Auto-process receipts from Google Photos
+  - ✅ Auto-send son photos
 
-### Architecture
-- **MVVM Pattern**: Uses ViewModel and StateFlow for reactive UI updates
-- **Coroutines**: Background processing with proper error handling
-- **ML Kit Integration**: Text recognition and face detection for image analysis
-- **Repository Pattern**: Clean data management with local storage
+### 3. **Automatic Processing**
+Once configured, you can use the new automatic buttons:
 
-### Dependencies
-- ML Kit for text recognition and face detection
-- OkHttp for API calls
-- Jetpack Compose for modern UI
-- Coroutines for asynchronous operations
+- 🔍 **Auto-Scan All Photos for Receipts** - Processes all photos to find receipts
+- 👦 **Auto-Send All Son Album Photos** - Sends all photos from Son album
+- 📸 **Process All Recent Photos** - Complete analysis of all photos
 
-## Setup Instructions
+## 📱 How It Works
 
-1. Configure the app settings in the Config tab:
-   - Telegram Bot Token
-   - Telegram Chat ID
-   - Email credentials
-   - Son's name
-   - Father's email
+### Receipt Detection
+- Uses Google ML Kit for text recognition
+- Analyzes photo content for receipt patterns
+- Extracts store name, total amount, items, and date
+- Sends formatted summaries to Telegram
 
-2. Ensure all required fields are filled (indicated by green "Configuration Valid" status)
+### Son Photo Detection
+- Uses ML Kit face detection
+- Automatically identifies photos containing people
+- Sends photos to father via email
+- Also shares via Telegram for immediate access
 
-3. Use the Process tab to select and analyze images
+### Google Photos Integration
+- Direct API access to your Google Photos library
+- No need to download or manually select photos
+- Processes photos in batches to avoid rate limiting
+- Maintains privacy and security
 
-## Troubleshooting
+## 🎯 Use Cases
 
-- **App stops responding**: This issue has been fixed by implementing proper background processing
-- **Memory errors**: Images are automatically resized to prevent memory issues
-- **Processing fails**: Check that your configuration is valid and you have internet connectivity
+### For Receipt Management
+- **Business Expense Tracking**: Automatically capture all receipt photos
+- **Personal Finance**: Keep track of daily spending
+- **Tax Preparation**: Organized receipt collection throughout the year
 
-## Development
+### For Family Photo Sharing
+- **Parental Updates**: Automatic sharing of son's activities
+- **Family Communication**: Keep everyone in the loop
+- **Memory Preservation**: Organized photo sharing without manual effort
 
-The app is built with:
-- Kotlin
-- Jetpack Compose
-- ML Kit
-- Coroutines
-- Modern Android development practices
+## 🔒 Privacy & Security
+
+- **Local Processing**: Photo analysis happens on your device
+- **Secure API**: Uses official Google Photos API with OAuth2
+- **No Data Storage**: Photos are processed but not stored by the app
+- **User Control**: You control what gets shared and where
+
+## 📋 Requirements
+
+- Android 7.0+ (API level 24)
+- Google account with Google Photos
+- Internet connection for API calls
+- Telegram bot (for notifications)
+- Email account (for photo sharing)
+
+## 🚀 Getting Started
+
+1. **Install the app** from your preferred source
+2. **Configure settings** in the Config tab
+3. **Sign in to Google Photos** using the Process tab
+4. **Enable automatic features** in configuration
+5. **Start processing** with the automatic buttons
+
+## 💡 Tips for Best Results
+
+- **Album Naming**: Ensure your "Son" album is exactly named "Son" in Google Photos
+- **Photo Quality**: Higher resolution photos work better for receipt detection
+- **Regular Processing**: Run automatic scans regularly for best results
+- **Network**: Ensure stable internet connection for API calls
+
+## �� Automatic Workflow
+
+1. **Sign in to Google Photos** once
+2. **Configure your destinations** (Telegram, email)
+3. **Click automatic processing buttons** as needed
+4. **Receive results** automatically via configured channels
+
+No more manual photo selection or processing - Sapier handles everything automatically! 🎉
+
+## 📞 Support
+
+For issues or questions:
+- Check the app's status messages
+- Ensure all configuration fields are filled
+- Verify Google Photos permissions
+- Check internet connectivity
+
+---
+
+**Sapier** - Making photo management intelligent and automatic! 📸✨

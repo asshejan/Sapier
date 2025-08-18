@@ -21,6 +21,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.sapier.data.AppConfig
 import com.example.sapier.data.Repository
 import com.example.sapier.service.EmailService
+import com.example.sapier.service.GooglePhotosService
 import com.example.sapier.service.TelegramService
 import com.example.sapier.ui.MainScreen
 import com.example.sapier.ui.MainViewModel
@@ -76,6 +77,19 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     
+                    // Google Sign-In launcher
+                    val googleSignInLauncher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.StartActivityForResult()
+                    ) { result ->
+                        if (result.resultCode == RESULT_OK) {
+                            val data = result.data
+                            viewModel.handleGoogleSignInResult(data)
+                        } else {
+                            // Handle sign-in failure
+                            viewModel.updateProcessingStatus("Google Sign-In failed or was cancelled")
+                        }
+                    }
+                    
                     MainScreen(
                         uiState = uiState,
                         onProcessImage = {
@@ -98,6 +112,10 @@ class MainActivity : ComponentActivity() {
                             // Send Sara's photos from album
                             viewModel.sendSaraPhoto(this@MainActivity)
                         },
+                        onSignInToGooglePhotos = {
+                            // Sign in to Google Photos using the launcher
+                            viewModel.signInToGooglePhotos(this@MainActivity, googleSignInLauncher)
+                        },
                         onUpdateConfig = { config ->
                             viewModel.updateConfig(config)
                         },
@@ -111,6 +129,22 @@ class MainActivity : ComponentActivity() {
                         },
                         onClearData = {
                             viewModel.clearAllData()
+                        },
+                        onAutoScanReceipts = {
+                            // Auto-scan all photos for receipts
+                            viewModel.autoScanAllPhotosForReceipts(this@MainActivity)
+                        },
+                        onAutoSendSonPhotos = {
+                            // Auto-send all Son album photos
+                            viewModel.autoSendAllSonPhotos(this@MainActivity)
+                        },
+                        onProcessAllRecentPhotos = {
+                            // Process all recent photos for receipts and son detection
+                            viewModel.processAllRecentPhotos(this@MainActivity)
+                        },
+                        onTestGooglePhotosConnection = {
+                            // Test Google Photos connection
+                            viewModel.testGooglePhotosConnection(this@MainActivity)
                         }
                     )
                 }

@@ -16,10 +16,15 @@ fun MainScreen(
     onTestTelegram: () -> Unit,
     onSendSonPhoto: () -> Unit,
     onSendSaraPhoto: () -> Unit,
+    onSignInToGooglePhotos: () -> Unit,
     onUpdateConfig: (com.example.sapier.data.AppConfig) -> Unit,
     onClearStatus: () -> Unit,
     onGetSummary: () -> Unit,
-    onClearData: () -> Unit
+    onClearData: () -> Unit,
+    onAutoScanReceipts: () -> Unit,
+    onAutoSendSonPhotos: () -> Unit,
+    onProcessAllRecentPhotos: () -> Unit,
+    onTestGooglePhotosConnection: () -> Unit
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     
@@ -66,7 +71,12 @@ fun MainScreen(
                     onTestTelegram = onTestTelegram,
                     onSendSaraPhoto = onSendSaraPhoto,
                     onSendSonPhoto = onSendSonPhoto,
-                    onClearStatus = onClearStatus
+                    onClearStatus = onClearStatus,
+                    onAutoScanReceipts = onAutoScanReceipts,
+                    onAutoSendSonPhotos = onAutoSendSonPhotos,
+                    onProcessAllRecentPhotos = onProcessAllRecentPhotos,
+                    onSignInToGooglePhotos = onSignInToGooglePhotos,
+                    onTestGooglePhotosConnection = onTestGooglePhotosConnection
                 )
                 1 -> ConfigTab(
                     config = uiState.config,
@@ -92,7 +102,12 @@ fun ProcessTab(
     onTestTelegram: () -> Unit,
     onSendSaraPhoto: () -> Unit,
     onSendSonPhoto: () -> Unit,
-    onClearStatus: () -> Unit
+    onClearStatus: () -> Unit,
+    onAutoScanReceipts: () -> Unit,
+    onAutoSendSonPhotos: () -> Unit,
+    onProcessAllRecentPhotos: () -> Unit,
+    onSignInToGooglePhotos: () -> Unit,
+    onTestGooglePhotosConnection: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -148,6 +163,22 @@ fun ProcessTab(
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             text = "Error",
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        Text(status.message)
+                    }
+                }
+            }
+            is com.example.sapier.data.ProcessingStatus.Info -> {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Information",
                             style = MaterialTheme.typography.headlineSmall
                         )
                         Text(status.message)
@@ -228,6 +259,88 @@ fun ProcessTab(
             )
         }
         
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Google Photos Sign In button
+        OutlinedButton(
+            onClick = { onSignInToGooglePhotos() },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = uiState.config.telegramBotToken.isNotBlank() && 
+                     uiState.config.telegramChatId.isNotBlank() && 
+                     uiState.processingStatus is com.example.sapier.data.ProcessingStatus.Idle
+        ) {
+            Text("Sign In to Google Photos")
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Test Google Photos Connection button
+        OutlinedButton(
+            onClick = { onTestGooglePhotosConnection() },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = uiState.config.telegramBotToken.isNotBlank() && 
+                     uiState.config.telegramChatId.isNotBlank() && 
+                     uiState.processingStatus is com.example.sapier.data.ProcessingStatus.Idle
+        ) {
+            Text("Test Google Photos Connection")
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Automatic Google Photos Processing Section
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "🤖 Automatic Google Photos Processing",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Auto-scan all photos for receipts
+                Button(
+                    onClick = onAutoScanReceipts,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = uiState.isConfigValid && uiState.processingStatus is com.example.sapier.data.ProcessingStatus.Idle,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text("🔍 Auto-Scan All Photos for Receipts")
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Auto-send all Son album photos
+                Button(
+                    onClick = onAutoSendSonPhotos,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = uiState.isConfigValid && uiState.processingStatus is com.example.sapier.data.ProcessingStatus.Idle,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Text("👦 Auto-Send All Son Album Photos")
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Process all recent photos
+                OutlinedButton(
+                    onClick = onProcessAllRecentPhotos,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = uiState.isConfigValid && uiState.processingStatus is com.example.sapier.data.ProcessingStatus.Idle
+                ) {
+                    Text("📸 Process All Recent Photos (Receipts + Son Detection)")
+                }
+            }
+        }
+        
         if (uiState.processingStatus !is com.example.sapier.data.ProcessingStatus.Idle) {
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedButton(
@@ -306,6 +419,68 @@ fun ConfigTab(
             label = { Text("Chat ID") },
             modifier = Modifier.fillMaxWidth()
         )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Google Photos Configuration
+        Text(
+            text = "Google Photos",
+            style = MaterialTheme.typography.titleMedium
+        )
+        
+        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            Checkbox(
+                checked = localConfig.useGooglePhotos,
+                onCheckedChange = { 
+                    localConfig = localConfig.copy(useGooglePhotos = it)
+                    onUpdateConfig(localConfig)
+                }
+            )
+            Text("Use Google Photos")
+        }
+        
+        if (localConfig.useGooglePhotos) {
+            OutlinedTextField(
+                value = localConfig.googlePhotosAccessToken,
+                onValueChange = { 
+                    localConfig = localConfig.copy(googlePhotosAccessToken = it)
+                    onUpdateConfig(localConfig)
+                },
+                label = { Text("Google Photos Access Token") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            
+            Text(
+                text = "Get your access token from Google Cloud Console or use OAuth2 flow",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Checkbox(
+                    checked = localConfig.autoSendReceipts,
+                    onCheckedChange = { 
+                        localConfig = localConfig.copy(autoSendReceipts = it)
+                        onUpdateConfig(localConfig)
+                    }
+                )
+                Text("Auto-process receipts from Google Photos")
+            }
+            
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Checkbox(
+                    checked = localConfig.autoSendSonPhotos,
+                    onCheckedChange = { 
+                        localConfig = localConfig.copy(autoSendSonPhotos = it)
+                        onUpdateConfig(localConfig)
+                    }
+                )
+                Text("Auto-send son photos")
+            }
+        }
         
         Spacer(modifier = Modifier.height(16.dp))
         

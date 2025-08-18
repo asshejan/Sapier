@@ -103,6 +103,29 @@ class TelegramService(private val context: Context) {
         }
     }
     
+    suspend fun sendMessage(message: String, botToken: String, chatId: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val json = JSONObject().apply {
+                    put("chat_id", chatId)
+                    put("text", message)
+                    put("parse_mode", "HTML")
+                }
+                
+                val requestBody = json.toString().toRequestBody(mediaType)
+                val request = Request.Builder()
+                    .url("https://api.telegram.org/bot$botToken/sendMessage")
+                    .post(requestBody)
+                    .build()
+                
+                val response = client.newCall(request).execute()
+                response.isSuccessful
+            } catch (e: Exception) {
+                false
+            }
+        }
+    }
+    
     private fun generateReceiptSummary(receipts: List<Receipt>): ReceiptSummary {
         val totalSpent = receipts.sumOf { it.total }
         val storeCounts = receipts.groupBy { it.store ?: "Unknown Store" }
